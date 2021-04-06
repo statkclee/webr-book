@@ -1,8 +1,10 @@
 ---
 title: "웹에서 하는 R 통계분석"
 description: |
-  웹에서 하는 R 통계분석
+  상용 통계 팩키지를 통해 수행되던 많은 통계 분석 작업이 이제는 "웹에서 하는 R 통계분석"을 통해 누구나 접근하여 활용할 수 있게 되었습니다.
 site: distill::distill_website
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -13,7 +15,22 @@ knitr::opts_chunk$set(echo = FALSE)
 # 머릿말
 
 ```{r webr-preface}
+library(tidyverse)
 webr_preface <- read_rds("data/webr_preface.rds")
-webr_preface
+
+# print(strwrap(webr_preface, width = 120))
+webr_preface_tbl <- tribble( ~"머릿말",
+                             webr_preface)
+webr_preface_tbl %>% 
+  reactable::reactable()
+```
+
+# 목차 
+
+```{r webr-toc}
+webr_toc_tbl  <-  read_rds(glue::glue("{here::here()}/data/webr_toc_tbl.rds"))
+
+webr_toc_tbl %>% 
+  reactable::reactable()
 ```
 

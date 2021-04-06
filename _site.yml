@@ -7,8 +7,6 @@ navbar:
   right:
     - text: "Home"
       href: index.html
-    - text: "About"
-      href: about.html
-    - text: "01_소개"
-      href: 01_intro.html      
+    - text: "02 설문조사"
+      href: 02_survey.html      
 output: distill::distill_article

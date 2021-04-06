@@ -2,7 +2,7 @@ library(tidyverse)
 library(pdftools)
 
 # 1. TOC 전처리 ----------------------
-webr_toc <- pdftools::pdf_toc("data/webr.pdf")
+webr_toc <- pdftools::pdf_toc(glue::glue("{here::here()}/data/webr.pdf"))
 
 webr_toc_lvl_01 <- pluck(webr_toc, "children")
 
@@ -35,13 +35,22 @@ webr_toc_tbl <- get_subtitle(1) %>%
   bind_rows(get_subtitle(3)) 
 
 webr_toc_tbl %>% 
-  write_rds("data/webr_toc_tbl.rds")
+  write_rds(glue::glue("{here::here()}/data/webr_toc_tbl.rds"))
 
 # 2. 머리말 추출 ----------------------
-webr_txt <- pdftools::pdf_text("data/webr.pdf")
+webr_txt <- pdftools::pdf_text(glue::glue("{here::here()}/data/webr.pdf"))
 
 webr_preface <- str_c(webr_txt[[2]], webr_txt[[3]]) %>% 
-  str_remove_all(pattern = "\r\n")
+  str_remove_all(pattern = "\r\n") %>% 
+  str_remove_all(pattern = "(\n)")  %>% 
+  str_remove_all(pattern = "\\\\")
+
 
 webr_preface %>% 
-  write_rds("data/webr_preface.rds")
+  write_rds(glue::glue("{here::here()}/data/webr_preface.rds"))
+
+# 2. PDF 이미지 추출 ---------------------
+
+# brew install poppler
+# mkdir images/
+# pdfimages -all webr.pdf ./images/
