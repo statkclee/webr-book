@@ -10,3 +10,10 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```
 
+# 머릿말
+
+```{r webr-preface}
+webr_preface <- read_rds("data/webr_preface.rds")
+webr_preface
+```
+

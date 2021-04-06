@@ -37,3 +37,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Web-R Book
+data/webr.pdf
