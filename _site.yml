@@ -1,12 +1,15 @@
 name: "webr-book"
 title: "웹에서 하는 R 통계분석"
+author: "문건웅"
 description: |
-  웹에서 하는 R 통계분석
+  웹R을 이용한 통계분석" 책을 원하는 분들이 많아 [leanpub](https://leanpub.com/webr) 을 통해 pdf형식으로 출간되어 누구나 활용이 가능합니다.
 output_dir: "."
 navbar:
   right:
-    - text: "Home"
-      href: index.html
+    - text: "01 맛보기"
+      href: 01_helloworld.html      
     - text: "02 설문조사"
       href: 02_survey.html      
+    - text: "03 실전 설문조사"
+      href: 03_survey_advanced.html            
 output: distill::distill_article

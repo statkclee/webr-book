@@ -54,3 +54,73 @@ webr_preface %>%
 # brew install poppler
 # mkdir images/
 # pdfimages -all webr.pdf ./images/
+
+
+# 3. Word 문서 ---------------------------
+
+library(officer)
+
+webr_docx <- officer::read_docx("data/webr.docx")
+webr_content <- docx_summary(webr_docx) %>% 
+  as_tibble()
+
+ch01_start_idx <- which(webr_content$text == "제 1 장")
+ch02_start_idx <- which(webr_content$text == "제 2 장")
+ch03_start_idx <- which(webr_content$text == "제 3 장")
+
+## 3.1. 1장 ------------------------------
+
+ch01_raw <- webr_content %>% 
+  mutate(text = str_remove(text, pattern = "\\d{15}")) %>% 
+  filter(between(row_number(), ch01_start_idx, ch02_start_idx - 1)) %>% 
+  filter(!text == "") %>% 
+  select(style_name, text)
+
+ch01_md <- ch01_raw %>% 
+  filter(!str_detect(text, "제\\s?[0-9]\\s?장")) %>% 
+  mutate(markdown = case_when(style_name == "heading 1"             ~ glue::glue("# {text} \n\n"),
+                              str_detect(text, "제\\s?[0-9]\\s?절") ~ glue::glue("## {text} \n\n"),
+                              style_name == "heading 3"             ~ glue::glue("### {text} \n\n"),
+                              TRUE                                  ~ glue::glue("{text} \n\n"))) %>% 
+  pull(markdown)
+
+print(ch01_md)
+
+## 3.2. 2장 ------------------------------
+
+ch02_raw <- webr_content %>% 
+  mutate(text = str_remove(text, pattern = "\\d{15}")) %>% 
+  filter(between(row_number(), ch02_start_idx, ch03_start_idx - 1)) %>% 
+  filter(!text == "") %>% 
+  select(style_name, text)
+
+ch02_md <- ch02_raw %>% 
+  filter(!str_detect(text, "제\\s?[0-9]\\s?장")) %>% 
+  slice(3:n()) %>%   
+  mutate(markdown = case_when(style_name == "heading 1"             ~ glue::glue("# {text} \n\n"),
+                              str_detect(text, "제\\s?[0-9]+\\s?절") ~ glue::glue("## {text} \n\n"),
+                              style_name == "heading 3"             ~ glue::glue("### {text} \n\n"),
+                              TRUE                                  ~ glue::glue("{text} \n\n"))) %>% 
+  pull(markdown)
+
+print(ch02_md)
+
+## 3.3. 3장 ------------------------------
+
+ch03_raw <- webr_content %>% 
+  mutate(text = str_remove(text, pattern = "\\d{15}")) %>% 
+  filter(between(row_number(), ch03_start_idx, n())) %>% 
+  filter(!text == "") %>% 
+  select(style_name, text)
+
+ch03_md <- ch03_raw %>% 
+  filter(!str_detect(text, "제\\s?[0-9]\\s?장")) %>% 
+  slice(3:n()) %>% 
+  mutate(markdown = case_when(style_name == "heading 1"             ~ glue::glue("# {text} \n\n"),
+                              str_detect(text, "제\\s?[0-9]+\\s?절") ~ glue::glue("## {text} \n\n"),
+                              style_name == "heading 3"             ~ glue::glue("### {text} \n\n"),
+                              TRUE                                  ~ glue::glue("{text} \n\n"))) %>% 
+  pull(markdown)
+
+print(ch03_md)
+

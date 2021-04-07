@@ -10,39 +10,52 @@ editor_options:
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r chapter-2}
+```{r chapter-2, results='asis'}
 library(tidyverse)
-library(pdftools)
+library(officer)
 
-# 2장 설문조사 ----------------------
-webr_txt <- pdftools::pdf_text(glue::glue("{here::here()}/data/webr.pdf"))
+webr_docx <- officer::read_docx("data/webr.docx")
+webr_content <- docx_summary(webr_docx) %>% 
+  as_tibble()
 
-chapter2_txt <- str_c(webr_txt[22:29], collapse = " ") %>% 
-  str_remove_all(pattern = "\r\n") %>% 
-  str_remove_all(pattern = "(\n)")  %>% 
-  str_remove_all(pattern = "\\\\") %>% 
-  str_remove_all(pattern = "제 2 장. 간단한 설문조사 데이터 전처리\\s+[0-9]{2}+")
+ch01_start_idx <- which(webr_content$text == "제 1 장")
+ch02_start_idx <- which(webr_content$text == "제 2 장")
+ch03_start_idx <- which(webr_content$text == "제 3 장")
 
+ch02_raw <- webr_content %>% 
+  mutate(text = str_remove(text, pattern = "\\d{15}")) %>% 
+  filter(between(row_number(), ch02_start_idx, ch03_start_idx - 1)) %>% 
+  filter(!text == "") %>% 
+  select(style_name, text)
 
-chapter2_tbl <- tribble( ~"간단한 설문조사 데이터 전처리",
-                             chapter2_txt)
-chapter2_tbl %>% 
-  reactable::reactable()
+ch02_md <- ch02_raw %>% 
+  filter(!str_detect(text, "제\\s?[0-9]\\s?장")) %>% 
+  slice(3:n()) %>%   
+  mutate(markdown = case_when(style_name == "heading 1"             ~ glue::glue("# {text} \n\n"),
+                              str_detect(text, "제\\s?[0-9]+\\s?절") ~ glue::glue("## {text} \n\n"),
+                              style_name == "heading 3"             ~ glue::glue("### {text} \n\n"),
+                              TRUE                                  ~ glue::glue("{text} \n\n"))) %>% 
+  pull(markdown)
+
+print(ch02_md)
+
 ```
 
-```{r images-slickr}
+# 그림과 그래프
+
+```{r images-slickr-ch02, eval = TRUE}
 library(slickR)
 
 webr_img <- fs::dir_ls(path = "data/images/", glob = "*.png")
 
 webr_tbl <- tibble(fig = glue::glue("{webr_img}") )
 
-ch2_tbl <- webr_tbl %>% 
+ch2_img_tbl <- webr_tbl %>% 
   mutate(page = str_extract(fig, pattern = "\\d+") %>% as.integer) %>% 
   filter(page %% 2 == 0) %>% 
   filter(page >= 34 & page <=62)
   
-slickR(ch2_tbl$fig, height = 600)
+slickR(ch2_img_tbl$fig, height = 600)
 ```
 
 

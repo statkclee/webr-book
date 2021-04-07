@@ -1,0 +1,58 @@
+---
+title: "데이터 전처리 맛보기"
+description: |
+  웹R을 이용한 통계분석의 맛보기를 데이터 전처리를 통해 살펴봅니다.
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r chapter-01, results='asis'}
+library(tidyverse)
+library(officer)
+
+webr_docx <- officer::read_docx("data/webr.docx")
+webr_content <- docx_summary(webr_docx) %>% 
+  as_tibble()
+
+ch01_start_idx <- which(webr_content$text == "제 1 장")
+ch02_start_idx <- which(webr_content$text == "제 2 장")
+ch03_start_idx <- which(webr_content$text == "제 3 장")
+
+ch01_raw <- webr_content %>% 
+  mutate(text = str_remove(text, pattern = "\\d{15}")) %>% 
+  filter(between(row_number(), ch01_start_idx, ch02_start_idx - 1)) %>% 
+  filter(!text == "") %>% 
+  select(style_name, text)
+
+ch01_md <- ch01_raw %>% 
+  filter(!str_detect(text, "제\\s?[0-9]\\s?장")) %>% 
+  slice(2:n()) %>%   
+  mutate(markdown = case_when(style_name == "heading 1"             ~ glue::glue("# {text} \n\n"),
+                              str_detect(text, "제\\s?[0-9]\\s?절") ~ glue::glue("## {text} \n\n"),
+                              style_name == "heading 3"             ~ glue::glue("### {text} \n\n"),
+                              TRUE                                  ~ glue::glue("{text} \n\n"))) %>% 
+  pull(markdown)
+
+print(ch01_md)
+```
+
+# 그림과 그래프
+
+```{r images-slickr-ch01, eval = TRUE}
+library(slickR)
+
+webr_img <- fs::dir_ls(path = "data/images/", glob = "*.png")
+
+webr_tbl <- tibble(fig = glue::glue("{webr_img}") )
+
+ch1_img_tbl <- webr_tbl %>% 
+  mutate(page = str_extract(fig, pattern = "\\d+") %>% as.integer) %>% 
+  filter(page %% 2 == 0) %>% 
+  filter(page >= 0 & page <= 33)
+  
+slickR(ch1_img_tbl$fig, height = 600)
+```

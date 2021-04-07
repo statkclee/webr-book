@@ -1,0 +1,58 @@
+---
+title: "실전 설문조사 데이터 전처리"
+description: |
+  이번 장에서는 JCI 인증에 대한 임상간호사의 인식과 태도, 직무스트레스라는 연구에 사용된 테이터를 가지고 전처리 연습을 해본다. 사용할 데이터(JCI인증.xlsx) 및 논문 (JCI인증.hwp)은 다음 주소에서 다운로드 받을 수 있다(http://web-r.org/book/1 4125). 자료를 다운받지 않아도 웹R의 무료서버에 접속하여 내장된 데이터를 이용할 수 있다.
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r chapter-03, results='asis'}
+library(tidyverse)
+library(officer)
+
+webr_docx <- officer::read_docx("data/webr.docx")
+webr_content <- docx_summary(webr_docx) %>% 
+  as_tibble()
+
+ch01_start_idx <- which(webr_content$text == "제 1 장")
+ch02_start_idx <- which(webr_content$text == "제 2 장")
+ch03_start_idx <- which(webr_content$text == "제 3 장")
+
+ch03_raw <- webr_content %>% 
+  mutate(text = str_remove(text, pattern = "\\d{15}")) %>% 
+  filter(between(row_number(), ch03_start_idx, n())) %>% 
+  filter(!text == "") %>% 
+  select(style_name, text)
+
+ch03_md <- ch03_raw %>% 
+  filter(!str_detect(text, "제\\s?[0-9]\\s?장")) %>% 
+  slice(3:n()) %>%   
+  mutate(markdown = case_when(style_name == "heading 1"             ~ glue::glue("# {text} \n\n"),
+                              str_detect(text, "제\\s?[0-9]+\\s?절") ~ glue::glue("## {text} \n\n"),
+                              style_name == "heading 3"             ~ glue::glue("### {text} \n\n"),
+                              TRUE                                  ~ glue::glue("{text} \n\n"))) %>% 
+  pull(markdown)
+
+print(ch03_md)
+```
+
+# 그림과 그래프
+
+```{r images-slickr-ch03, eval = TRUE}
+library(slickR)
+
+webr_img <- fs::dir_ls(path = "data/images/", glob = "*.png")
+
+webr_tbl <- tibble(fig = glue::glue("{webr_img}") )
+
+ch3_img_tbl <- webr_tbl %>% 
+  mutate(page = str_extract(fig, pattern = "\\d+") %>% as.integer) %>% 
+  filter(page %% 2 == 0) %>% 
+  filter(page >= 63)
+  
+slickR(ch3_img_tbl$fig, height = 600)
+```
